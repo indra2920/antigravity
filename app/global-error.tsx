@@ -22,6 +22,11 @@ export default function GlobalError({
                             <p className="text-slate-600 mb-6">
                                 {error.message || 'Maaf, terjadi kesalahan yang tidak terduga.'}
                             </p>
+                            {error.digest && (
+                                <p className="text-xs text-slate-400 mb-6 font-mono bg-slate-100 p-2 rounded">
+                                    Error Digest: {error.digest}
+                                </p>
+                            )}
                             <button
                                 onClick={reset}
                                 className="bg-emerald-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-emerald-700 transition w-full"
