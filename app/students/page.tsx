@@ -2,6 +2,10 @@ import { getStudents, getClasses, createStudent, seedInitialData } from "../acti
 import { UserPlus, Trash2 } from "lucide-react";
 import Link from "next/link";
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function StudentsPage() {
     // Auto-seed for demo purposes if empty
     await seedInitialData();

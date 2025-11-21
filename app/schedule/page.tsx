@@ -1,6 +1,10 @@
 import { getSchedules, getSubjects, getTeachers, getClasses } from "../master/actions";
 import ScheduleClient from "./ScheduleClient";
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function SchedulePage() {
     const schedules = await getSchedules();
     const subjects = await getSubjects();
