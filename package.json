@@ -8,9 +8,6 @@
     "start": "next start",
     "lint": "eslint"
   },
-  "prisma": {
-    "schema": "prisma/schema.prisma"
-  },
   "dependencies": {
     "@prisma/client": "^5.22.0",
     "clsx": "^2.1.1",
