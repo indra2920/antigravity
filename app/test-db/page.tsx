@@ -1,10 +1,9 @@
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export default async function TestDbPage() {
-    const prisma = new PrismaClient();
     let status = "Pending";
     let message = "";
     let envCheck = "";
