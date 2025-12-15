@@ -214,6 +214,11 @@ export async function updateSubject(id: number | string, formData: FormData) {
     revalidatePath("/master/subjects");
 }
 
+export async function deleteSubject(id: number | string) {
+    await firestore.collection("subjects").doc(id.toString()).delete();
+    revalidatePath("/master/subjects");
+}
+
 // ===== TEACHERS =====
 export async function getTeachers() {
     const snapshot = await firestore.collection("teachers").orderBy("name").get();
