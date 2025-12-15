@@ -3,13 +3,15 @@
 import { useState } from "react";
 import PhotoUpload from "@/components/PhotoUpload";
 import ExcelUtils from "@/components/ExcelUtils";
-import { Trash2, GraduationCap, Mail, MapPin, Calendar, User } from "lucide-react";
-import { createTeacher, deleteTeacher } from "../actions";
+import { Trash2, GraduationCap, Mail, MapPin, Calendar, User, Edit2, X, QrCode } from "lucide-react";
+import Link from "next/link";
+import { createTeacher, deleteTeacher, updateTeacher } from "../actions";
 import { bulkImportTeachers } from "../bulk-actions";
 
 export default function TeachersClient({ teachers, subjects }: { teachers: any[], subjects: any[] }) {
     const [photo, setPhoto] = useState("");
     const [importing, setImporting] = useState(false);
+    const [editingTeacher, setEditingTeacher] = useState<any>(null);
 
     const handleImport = async (data: any[]) => {
         setImporting(true);
@@ -51,15 +53,34 @@ export default function TeachersClient({ teachers, subjects }: { teachers: any[]
         if (photo) {
             formData.set('photo', photo);
         }
-        await createTeacher(formData);
+
+        if (editingTeacher) {
+            await updateTeacher(editingTeacher.id, formData);
+            alert("Data guru berhasil diperbarui");
+        } else {
+            await createTeacher(formData);
+            alert("Guru baru berhasil ditambahkan");
+        }
+
         setPhoto("");
-        window.location.reload();
+        setEditingTeacher(null);
+        // window.location.reload(); // Optional if revalidatePath works well
+    };
+
+    const handleBeginEdit = (teacher: any) => {
+        setEditingTeacher(teacher);
+        setPhoto(teacher.photo || "");
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    const handleCancelEdit = () => {
+        setEditingTeacher(null);
+        setPhoto("");
     };
 
     const handleDelete = async (id: number) => {
         if (confirm('Yakin ingin menghapus data guru ini?')) {
             await deleteTeacher(id);
-            window.location.reload();
         }
     };
 
@@ -77,22 +98,30 @@ export default function TeachersClient({ teachers, subjects }: { teachers: any[]
                 {importing && <p className="text-sm text-amber-600 mt-2">Sedang mengimport data...</p>}
             </div>
 
-            {/* Add Form */}
+            {/* Add/Edit Form */}
             <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
-                <h3 className="font-semibold text-slate-700 mb-4 flex items-center gap-2">
-                    <GraduationCap className="w-5 h-5 text-amber-600" />
-                    Tambah Guru Baru
-                </h3>
-                <form action={handleSubmit} className="space-y-4">
+                <div className="flex justify-between items-center mb-4">
+                    <h3 className="font-semibold text-slate-700 flex items-center gap-2">
+                        <GraduationCap className="w-5 h-5 text-amber-600" />
+                        {editingTeacher ? `Edit Guru: ${editingTeacher.name}` : 'Tambah Guru Baru'}
+                    </h3>
+                    {editingTeacher && (
+                        <button onClick={handleCancelEdit} className="text-sm text-red-500 hover:text-red-700 flex items-center gap-1">
+                            <X className="w-4 h-4" /> Batal Edit
+                        </button>
+                    )}
+                </div>
+
+                <form key={editingTeacher ? editingTeacher.id : 'new'} action={handleSubmit} className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
-                        <input name="name" type="text" required placeholder="Nama Lengkap *" className="px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-emerald-500 focus:ring-2 focus:ring-emerald-200" />
-                        <input name="nip" type="text" required placeholder="NIP *" className="px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-emerald-500 focus:ring-2 focus:ring-emerald-200" />
+                        <input name="name" defaultValue={editingTeacher?.name} type="text" required placeholder="Nama Lengkap *" className="px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-emerald-500 focus:ring-2 focus:ring-emerald-200" />
+                        <input name="nip" defaultValue={editingTeacher?.nip} type="text" required placeholder="NIP *" className="px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-emerald-500 focus:ring-2 focus:ring-emerald-200" />
                     </div>
 
                     <div className="grid grid-cols-3 gap-4">
-                        <input name="email" type="email" placeholder="Email" className="px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-emerald-500 focus:ring-2 focus:ring-emerald-200" />
-                        <input name="phone" type="tel" placeholder="No. HP" className="px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-emerald-500 focus:ring-2 focus:ring-emerald-200" />
-                        <select name="gender" className="px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-emerald-500 focus:ring-2 focus:ring-emerald-200">
+                        <input name="email" defaultValue={editingTeacher?.email} type="email" placeholder="Email" className="px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-emerald-500 focus:ring-2 focus:ring-emerald-200" />
+                        <input name="phone" defaultValue={editingTeacher?.phone} type="tel" placeholder="No. HP" className="px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-emerald-500 focus:ring-2 focus:ring-emerald-200" />
+                        <select name="gender" defaultValue={editingTeacher?.gender || ""} className="px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-emerald-500 focus:ring-2 focus:ring-emerald-200">
                             <option value="">Jenis Kelamin</option>
                             <option value="L">Laki-laki</option>
                             <option value="P">Perempuan</option>
@@ -100,8 +129,8 @@ export default function TeachersClient({ teachers, subjects }: { teachers: any[]
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
-                        <input name="birthDate" type="date" placeholder="Tanggal Lahir" className="px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-emerald-500 focus:ring-2 focus:ring-emerald-200" />
-                        <select name="subjectId" className="px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-emerald-500 focus:ring-2 focus:ring-emerald-200">
+                        <input name="birthDate" defaultValue={editingTeacher?.birthDate} type="date" placeholder="Tanggal Lahir" className="px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-emerald-500 focus:ring-2 focus:ring-emerald-200" />
+                        <select name="subjectId" defaultValue={editingTeacher?.subjectId || ""} className="px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-emerald-500 focus:ring-2 focus:ring-emerald-200">
                             <option value="">Pilih Mata Pelajaran (Opsional)</option>
                             {subjects.map((subject: any) => (
                                 <option key={subject.id} value={subject.id}>{subject.name}</option>
@@ -109,15 +138,18 @@ export default function TeachersClient({ teachers, subjects }: { teachers: any[]
                         </select>
                     </div>
 
-                    <textarea name="address" rows={2} placeholder="Alamat Lengkap" className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-emerald-500 focus:ring-2 focus:ring-emerald-200" />
+                    <textarea name="address" defaultValue={editingTeacher?.address} rows={2} placeholder="Alamat Lengkap" className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-emerald-500 focus:ring-2 focus:ring-emerald-200" />
 
                     <div className="border-t border-slate-100 pt-4">
                         <h4 className="text-sm font-semibold text-slate-600 mb-3">Foto Guru</h4>
                         <PhotoUpload onPhotoChange={setPhoto} label="Upload Foto" />
+                        {editingTeacher?.photo && !photo && (
+                            <p className="text-xs text-slate-400 mt-1">* Foto sudah ada. Upload baru untuk mengganti.</p>
+                        )}
                     </div>
 
                     <button type="submit" className="w-full bg-amber-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-amber-700 transition shadow-lg shadow-amber-200">
-                        Simpan Data Guru
+                        {editingTeacher ? 'Simpan Perubahan' : 'Simpan Data Guru'}
                     </button>
                 </form>
             </div>
@@ -125,7 +157,7 @@ export default function TeachersClient({ teachers, subjects }: { teachers: any[]
             {/* List */}
             <div className="space-y-3">
                 {teachers.map((teacher: any) => (
-                    <div key={teacher.id} className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 hover:shadow-md transition">
+                    <div key={teacher.id} className={`bg-white rounded-2xl p-5 shadow-sm border hover:shadow-md transition ${editingTeacher?.id === teacher.id ? 'border-amber-500 ring-1 ring-amber-200' : 'border-slate-100'}`}>
                         <div className="flex items-start gap-4">
                             <div className="w-16 h-16 rounded-full bg-gradient-to-br from-amber-100 to-orange-200 flex items-center justify-center text-amber-600 font-bold text-xl flex-shrink-0 overflow-hidden">
                                 {teacher.photo ? (
@@ -176,9 +208,17 @@ export default function TeachersClient({ teachers, subjects }: { teachers: any[]
                                 )}
                             </div>
 
-                            <button onClick={() => handleDelete(teacher.id)} className="p-2.5 text-red-600 hover:bg-red-50 rounded-lg transition flex-shrink-0">
-                                <Trash2 className="w-5 h-5" />
-                            </button>
+                            <div className="flex flex-col gap-2">
+                                <Link href={`/teachers/card/${teacher.id}`} className="p-2.5 text-emerald-600 hover:bg-emerald-50 rounded-lg transition flex-shrink-0 flex items-center justify-center">
+                                    <QrCode className="w-5 h-5" />
+                                </Link>
+                                <button onClick={() => handleBeginEdit(teacher)} className="p-2.5 text-blue-600 hover:bg-blue-50 rounded-lg transition flex-shrink-0">
+                                    <Edit2 className="w-5 h-5" />
+                                </button>
+                                <button onClick={() => handleDelete(teacher.id)} className="p-2.5 text-red-600 hover:bg-red-50 rounded-lg transition flex-shrink-0">
+                                    <Trash2 className="w-5 h-5" />
+                                </button>
+                            </div>
                         </div>
                     </div>
                 ))}

@@ -1,6 +1,6 @@
-# 🚀 Deployment Guide - Vercel
+# 🚀 Deployment Guide - Vercel (Firebase Edition)
 
-Panduan lengkap untuk deploy aplikasi **YAYASAN DARULHUDA School Management System** ke Vercel.
+Panduan lengkap untuk deploy aplikasi **YAYASAN DARULHUDA School Management System** ke Vercel dengan database **Google Firestore**.
 
 ---
 
@@ -10,7 +10,7 @@ Sebelum deploy, pastikan Anda memiliki:
 
 - [x] Akun GitHub (untuk menyimpan kode)
 - [x] Akun Vercel (gratis) - [Daftar di sini](https://vercel.com/signup)
-- [x] Git terinstall di komputer
+- [x] File `serviceAccountKey.json` dari Firebase Console (untuk credential)
 
 ---
 
@@ -58,267 +58,65 @@ Vercel akan otomatis mendeteksi Next.js. Pastikan:
 
 - **Framework Preset**: Next.js
 - **Root Directory**: `./` (default)
-- **Build Command**: `npm run build` (sudah di-set di package.json)
+- **Build Command**: `npm run build`
 - **Output Directory**: `.next` (default)
 
-### 2.3 Setup Environment Variables
+### 2.3 Setup Environment Variables (PENTING!)
 
-**JANGAN DEPLOY DULU!** Klik **Environment Variables** dan tambahkan:
+Aplikasi ini menggunakan Firebase, jadi Anda WAJIB menambahkan environment variables berikut di Vercel:
 
-```
-DATABASE_URL = (akan diisi setelah membuat database)
-```
+Buka file `serviceAccountKey.json` Anda, dan salin isinya ke variable berikut:
 
-Klik **Save** tapi **JANGAN klik Deploy yet!**
+| Variable Name | Value dari `serviceAccountKey.json` |
+| :--- | :--- |
+| `FIREBASE_PROJECT_ID` | `project_id` |
+| `FIREBASE_CLIENT_EMAIL` | `client_email` |
+| **`FIREBASE_PRIVATE_KEY`** | `private_key` (Lihat catatan di bawah!) |
 
----
+> [!IMPORTANT]
+> **Format FIREBASE_PRIVATE_KEY**:
+> Value private key dari JSON biasanya berisi baris baru (`\n`).
+> Saat paste di Vercel, pastikan Anda menyalin **SELURUH** isi string termasuk `-----BEGIN PRIVATE KEY-----` sampai `-----END PRIVATE KEY-----`.
+> Vercel biasanya otomatis menangani newlines, tapi jika error, coba ganti `\n` dengan baris baru enter yang sebenarnya.
 
-## 🗃️ Step 3: Setup Vercel Postgres Database
+**Variable Tambahan (Wajib):**
 
-### 3.1 Create Database
+| Variable Name | Value |
+| :--- | :--- |
+| `NEXT_PUBLIC_APP_URL` | `https://nama-project-anda.vercel.app` (isi setelah deploy nanti) |
 
-1. Di Vercel Dashboard, buka tab **Storage**
-2. Klik **Create Database**
-3. Pilih **Postgres**
-4. Pilih region **Singapore (sin1)** (terdekat dengan Indonesia)
-5. Klik **Create**
-
-### 3.2 Connect Database to Project
-
-1. Setelah database dibuat, klik **Connect Project**
-2. Pilih project yang baru dibuat
-3. Vercel akan otomatis menambahkan environment variables:
-   - `POSTGRES_URL`
-   - `POSTGRES_PRISMA_URL`
-   - `POSTGRES_URL_NON_POOLING`
-   - `POSTGRES_URL_NO_SSL`
-   - `POSTGRES_USER`
-   - `POSTGRES_HOST`
-   - `POSTGRES_PASSWORD`
-   - `POSTGRES_DATABASE`
-
-### 3.3 Set DATABASE_URL
-
-1. Kembali ke **Settings** → **Environment Variables**
-2. Edit variable `DATABASE_URL`
-3. Isi dengan value dari `POSTGRES_PRISMA_URL`
-4. Klik **Save**
+Klik **Save** tapi **JANGAN klik Deploy yet!** (Save dulu environment variables-nya).
 
 ---
 
-## 🚢 Step 4: Deploy!
+## 🚢 Step 3: Deploy!
 
-### 4.1 Trigger Deployment
-
-1. Kembali ke tab **Deployments**
-2. Klik **Redeploy** (atau push commit baru ke GitHub)
-3. Tunggu proses build (~2-3 menit)
-
-### 4.2 Run Database Migration
-
-Setelah deployment berhasil, jalankan migration:
-
-1. Di Vercel Dashboard, buka project
-2. Klik **Settings** → **Functions**
-3. Atau gunakan Vercel CLI:
-
-```bash
-# Install Vercel CLI
-npm i -g vercel
-
-# Login
-vercel login
-
-# Link project
-vercel link
-
-# Run migration
-vercel env pull .env.production
-npx prisma migrate deploy
-```
-
-**ATAU** lebih mudah, gunakan Prisma Data Platform:
-
-1. Buka terminal di project
-2. Jalankan:
-
-```bash
-npx prisma db push
-```
-
-3. Masukkan `DATABASE_URL` dari Vercel saat diminta
-
----
-
-## 🌱 Step 5: Seed Initial Data
-
-Setelah migration berhasil, seed data awal:
-
-### Option 1: Via Browser
-
-1. Buka aplikasi yang sudah di-deploy
-2. Tambahkan data manual:
-   - **Tingkat**: X, XI, XII
-   - **Mata Pelajaran**: Matematika, Bahasa Indonesia, dll
-   - **Kelas**: X IPA 1, X IPS 1, dll
-
-### Option 2: Via API (Advanced)
-
-Buat file `seed.ts` dan jalankan:
-
-```bash
-npx tsx prisma/seed.ts
-```
-
----
-
-## ✅ Step 6: Verification
-
-### 6.1 Test Aplikasi
-
-Buka URL deployment (misalnya: `https://darulhuda-school-system.vercel.app`)
-
-Test semua fitur:
-
-- [ ] Homepage loading
-- [ ] Tambah Tingkat baru
-- [ ] Tambah Kelas baru
-- [ ] Tambah Mata Pelajaran
-- [ ] Tambah Guru
-- [ ] Tambah Siswa
-- [ ] Hapus data (test delete buttons)
-- [ ] Data persist setelah refresh
-
-### 6.2 Check Database
-
-1. Buka Vercel Dashboard → Storage → Postgres
-2. Klik **Data** tab
-3. Verify data tersimpan dengan benar
+1. Klik **Deploy**
+2. Tunggu proses build (~1-3 menit)
+3. Jika berhasil, Anda akan diarahkan ke halaman "Congratulations!"
 
 ---
 
 ## 🔧 Troubleshooting
 
-### Build Failed
+### 1. Error: `Error parsing private key`
+Ini masalah paling umum. Cek `FIREBASE_PRIVATE_KEY`:
+- Pastikan tidak ada tanda kutip ganda `"` di awal/akhir jika Anda copy manual dari JSON (tergantung cara copy-nya).
+- Pastikan header `-----BEGIN PRIVATE KEY-----` terbawa.
 
-**Error**: `Prisma Client not generated`
+### 2. Build Error: Type Check Failed
+Jika build gagal karena error TypeScript yang ketat, Anda bisa meminta developer untuk mematikan `typescript ignoreBuildErrors: true` di `next.config.js` untuk sementara.
 
-**Solution**:
-```bash
-# Pastikan postinstall script ada di package.json
-"postinstall": "prisma generate"
-```
-
-### Database Connection Error
-
-**Error**: `Can't reach database server`
-
-**Solution**:
-1. Check `DATABASE_URL` di Environment Variables
-2. Pastikan menggunakan `POSTGRES_PRISMA_URL` (bukan `POSTGRES_URL`)
-3. Pastikan SSL mode enabled: `?sslmode=require`
-
-### Migration Failed
-
-**Error**: `Migration failed to apply`
-
-**Solution**:
-```bash
-# Reset database (WARNING: deletes all data)
-npx prisma migrate reset
-
-# Or push schema directly
-npx prisma db push
-```
-
-### 404 Error on Routes
-
-**Solution**:
-- Pastikan semua routes ada di folder `app/`
-- Check `next.config.js` tidak ada custom routing
-
----
-
-## 🎯 Post-Deployment Checklist
-
-- [ ] Custom domain (optional) - Settings → Domains
-- [ ] Enable Vercel Analytics - Analytics tab
-- [ ] Set up monitoring - Integrations → Sentry/LogRocket
-- [ ] Configure CORS if needed
-- [ ] Add OG images for social sharing
-- [ ] Test on mobile devices
-- [ ] Set up automated backups
-
----
-
-## 📊 Monitoring & Maintenance
-
-### Check Logs
-
-```bash
-vercel logs <deployment-url>
-```
-
-### Database Backup
-
-1. Vercel Dashboard → Storage → Postgres
-2. Klik **Backups** tab
-3. Enable automated backups (Pro plan)
-
-**Free tier**: Export manual via Prisma Studio
-
-### Update Deployment
-
-Setiap kali push ke GitHub, Vercel otomatis deploy:
-
-```bash
-git add .
-git commit -m "Update feature"
-git push origin main
-```
-
----
-
-## 💰 Cost Estimate
-
-**Vercel Hobby Plan** (FREE):
-- ✅ Unlimited deployments
-- ✅ 100GB bandwidth/month
-- ✅ Automatic HTTPS
-- ✅ Global CDN
-
-**Vercel Postgres** (FREE):
-- ✅ 256 MB storage
-- ✅ 60 hours compute time/month
-- ✅ 256 MB data transfer
-
-**Total**: **$0/month** untuk penggunaan sekolah
-
-> [!TIP]
-> Untuk production dengan traffic tinggi, upgrade ke Pro plan ($20/month)
-
----
-
-## 🆘 Need Help?
-
-- **Vercel Docs**: https://vercel.com/docs
-- **Prisma Docs**: https://www.prisma.io/docs
-- **Next.js Docs**: https://nextjs.org/docs
+### 3. Halaman "Unknown" / Blank
+- Cek tab **Logs** di dashboard deployment Vercel.
+- Biasanya karena environment variable belum terbaca/salah. Redeploy setelah update env var.
 
 ---
 
 ## 🎉 Success!
 
-Aplikasi Anda sekarang live di internet! 🚀
+Aplikasi Anda sekarang live! Database Firestore yang digunakan adalah database **Production** yang sama dengan development (jika Anda pakai project ID yang sama).
 
-**Next Steps**:
-1. Share URL ke tim/pengguna
-2. Monitor usage di Vercel Analytics
-3. Collect feedback
-4. Iterate and improve
-
----
-
-**Deployment URL**: `https://your-project.vercel.app`
+**Deployment URL**: `https://darulhuda-school-system.vercel.app`
 
 Selamat! Aplikasi YAYASAN DARULHUDA sudah online! 🎊

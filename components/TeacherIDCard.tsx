@@ -5,15 +5,15 @@ import html2canvas from "html2canvas";
 import QRCode from "qrcode";
 import { Download, User, GraduationCap } from "lucide-react";
 
-export default function IDCard({ student }: { student: any }) {
+export default function TeacherIDCard({ teacher }: { teacher: any }) {
     const cardRef = useRef<HTMLDivElement>(null);
     const [qrCodeUrl, setQrCodeUrl] = useState<string>("");
 
     useEffect(() => {
         const generateQR = async () => {
             try {
-                // QR Content: NIS for quick scanning
-                const qrData = student.nis;
+                // QR Content: NIP for quick scanning
+                const qrData = teacher.nip;
                 const url = await QRCode.toDataURL(qrData, {
                     width: 300,
                     margin: 0,
@@ -28,7 +28,7 @@ export default function IDCard({ student }: { student: any }) {
             }
         };
         generateQR();
-    }, [student.nis]);
+    }, [teacher.nip]);
 
     const handleDownload = async () => {
         if (cardRef.current) {
@@ -42,18 +42,13 @@ export default function IDCard({ student }: { student: any }) {
                 const image = canvas.toDataURL("image/png");
                 const link = document.createElement("a");
                 link.href = image;
-                link.download = `KARTU_SISWA_${student.name.replace(/\s+/g, '_').toUpperCase()}.png`;
+                link.download = `KARTU_GURU_${teacher.name.replace(/\s+/g, '_').toUpperCase()}.png`;
                 link.click();
             } catch (err) {
                 console.error("Download failed", err);
                 alert("Gagal mendownload kartu");
             }
         }
-    };
-
-    // Helper for proper capitalization
-    const formatName = (name: string) => {
-        return name.toUpperCase();
     };
 
     return (
@@ -66,7 +61,7 @@ export default function IDCard({ student }: { student: any }) {
                     className="w-[320px] h-[500px] bg-white rounded-3xl overflow-hidden shadow-[0_10px_40px_-10px_rgba(0,0,0,0.2)] flex flex-col relative font-sans"
                 >
                     {/* TOP SECTION - HEADER */}
-                    <div className="h-[180px] bg-gradient-to-br from-emerald-700 via-emerald-600 to-teal-600 relative overflow-hidden">
+                    <div className="h-[180px] bg-gradient-to-br from-amber-700 via-amber-600 to-orange-600 relative overflow-hidden">
                         {/* Pattern Overlay */}
                         <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle, #fff 1px, transparent 1px)', backgroundSize: '16px 16px' }}></div>
 
@@ -78,10 +73,10 @@ export default function IDCard({ student }: { student: any }) {
                         <div className="relative z-10 flex flex-col items-center justify-center h-full pb-8 text-white">
                             <div className="flex items-center gap-2 mb-1">
                                 <GraduationCap className="w-6 h-6 text-yellow-300" />
-                                <span className="text-[10px] font-bold tracking-[0.2em] text-emerald-100 uppercase">Kartu Tanda Siswa</span>
+                                <span className="text-[10px] font-bold tracking-[0.2em] text-amber-100 uppercase">Kartu Tanda Guru</span>
                             </div>
                             <h1 className="text-xl font-bold tracking-wide">YAYASAN DARULHUDA</h1>
-                            <p className="text-xs text-emerald-100 font-medium tracking-wide">Islamic Boarding School</p>
+                            <p className="text-xs text-amber-100 font-medium tracking-wide">Islamic Boarding School</p>
                         </div>
 
                         {/* Curve Divider */}
@@ -92,10 +87,10 @@ export default function IDCard({ student }: { student: any }) {
                     <div className="relative flex flex-col items-center -mt-16 z-20">
                         {/* Profile Photo */}
                         <div className="relative">
-                            <div className="w-28 h-28 rounded-full p-1 bg-white shadow-lg ring-1 ring-emerald-50">
+                            <div className="w-28 h-28 rounded-full p-1 bg-white shadow-lg ring-1 ring-amber-50">
                                 <div className="w-full h-full rounded-full bg-slate-100 overflow-hidden relative">
-                                    {student.photo ? (
-                                        <img src={student.photo} alt={student.name} className="w-full h-full object-cover" />
+                                    {teacher.photo ? (
+                                        <img src={teacher.photo} alt={teacher.name} className="w-full h-full object-cover" />
                                     ) : (
                                         <div className="w-full h-full flex items-center justify-center bg-slate-50 text-slate-300">
                                             <User className="w-12 h-12" />
@@ -103,23 +98,23 @@ export default function IDCard({ student }: { student: any }) {
                                     )}
                                 </div>
                             </div>
-                            {/* Class Badge */}
+                            {/* Role Badge */}
                             <div className="absolute -bottom-3 left-1/2 transform -translate-x-1/2">
-                                <div className="bg-yellow-400 text-emerald-900 px-3 py-1 rounded-full shadow-md border-2 border-white">
+                                <div className="bg-emerald-600 text-white px-3 py-1 rounded-full shadow-md border-2 border-white">
                                     <p className="text-[10px] font-bold uppercase tracking-wider whitespace-nowrap">
-                                        {student.class?.level?.name || 'Tingkat'} • {student.class?.name || 'Kelas'}
+                                        Pengajar
                                     </p>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Name & NIS */}
+                        {/* Name & NIP */}
                         <div className="mt-5 text-center px-4 w-full">
                             <h2 className="text-lg font-bold text-slate-800 uppercase leading-tight mb-1 truncate">
-                                {student.name}
+                                {teacher.name}
                             </h2>
-                            <p className="text-sm font-mono text-emerald-600 font-bold bg-emerald-50 inline-block px-3 py-0.5 rounded-md">
-                                {student.nis}
+                            <p className="text-sm font-mono text-amber-600 font-bold bg-amber-50 inline-block px-3 py-0.5 rounded-md">
+                                {teacher.nip}
                             </p>
                         </div>
                     </div>
@@ -134,21 +129,21 @@ export default function IDCard({ student }: { student: any }) {
                             <div className="flex justify-between items-center group">
                                 <span className="text-slate-400 font-medium">Tempat, Tgl Lahir</span>
                                 <span className="text-slate-700 font-semibold text-right">
-                                    {student.birthPlace || '-'}, {student.birthDate || '-'}
+                                    {teacher.birthDate || '-'}
                                 </span>
                             </div>
                             <div className="h-px bg-slate-50 w-full"></div>
                             <div className="flex justify-between items-center">
-                                <span className="text-slate-400 font-medium">Jenis Kelamin</span>
+                                <span className="text-slate-400 font-medium">Mata Pelajaran</span>
                                 <span className="text-slate-700 font-semibold">
-                                    {student.gender === 'L' ? 'Laki-laki' : 'Perempuan'}
+                                    {teacher.subject?.name || '-'}
                                 </span>
                             </div>
                             <div className="h-px bg-slate-50 w-full"></div>
                             <div className="flex justify-between items-start">
                                 <span className="text-slate-400 font-medium whitespace-nowrap mr-4">Alamat</span>
                                 <span className="text-slate-700 font-semibold text-right leading-tight line-clamp-2">
-                                    {student.address || '-'}
+                                    {teacher.address || '-'}
                                 </span>
                             </div>
                         </div>
@@ -156,7 +151,7 @@ export default function IDCard({ student }: { student: any }) {
                         {/* Footer / QR */}
                         <div className="mt-4 flex items-end justify-between">
                             <div className="text-[9px] text-slate-400 leading-relaxed">
-                                <p className="font-bold text-slate-500 mb-0.5">Berlaku Selama Menjadi Siswa</p>
+                                <p className="font-bold text-slate-500 mb-0.5">Guru Profesional</p>
                                 <p>Yayasan Darulhuda School</p>
                                 <p>Tahun Ajaran 2024/2025</p>
                             </div>

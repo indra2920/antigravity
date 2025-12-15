@@ -2,12 +2,13 @@
 
 import { useState } from "react";
 import ExcelUtils from "@/components/ExcelUtils";
-import { Trash2, BookMarked } from "lucide-react";
-import { createSubject, deleteSubject } from "../actions";
+import { Trash2, BookMarked, Edit2, Check, X } from "lucide-react";
+import { createSubject, deleteSubject, updateSubject } from "../actions";
 import { bulkImportSubjects } from "../bulk-actions";
 
 export default function SubjectsClient({ subjects }: { subjects: any[] }) {
     const [importing, setImporting] = useState(false);
+    const [editingId, setEditingId] = useState<number | null>(null);
 
     const handleImport = async (data: any[]) => {
         setImporting(true);
@@ -80,20 +81,50 @@ export default function SubjectsClient({ subjects }: { subjects: any[] }) {
                         key={subject.id}
                         className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 hover:shadow-md transition"
                     >
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center">
-                                    <BookMarked className="w-5 h-5 text-amber-600" />
+                        {editingId === subject.id ? (
+                            <form
+                                className="flex items-center gap-2 w-full"
+                                action={async (formData) => {
+                                    await updateSubject(subject.id, formData);
+                                    setEditingId(null);
+                                }}
+                            >
+                                <input
+                                    name="name"
+                                    defaultValue={subject.name}
+                                    className="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-emerald-500"
+                                    autoFocus
+                                />
+                                <div className="flex gap-1">
+                                    <button type="submit" className="p-2 bg-emerald-100 text-emerald-700 rounded-lg hover:bg-emerald-200">
+                                        <Check className="w-4 h-4" />
+                                    </button>
+                                    <button type="button" onClick={() => setEditingId(null)} className="p-2 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200">
+                                        <X className="w-4 h-4" />
+                                    </button>
                                 </div>
-                                <div>
-                                    <h3 className="font-bold text-slate-800 text-sm">{subject.name}</h3>
-                                    <p className="text-xs text-slate-500">{subject.teachers?.length || 0} Guru</p>
+                            </form>
+                        ) : (
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center">
+                                        <BookMarked className="w-5 h-5 text-amber-600" />
+                                    </div>
+                                    <div>
+                                        <h3 className="font-bold text-slate-800 text-sm">{subject.name}</h3>
+                                        <p className="text-xs text-slate-500">{subject.teachers?.length || 0} Guru</p>
+                                    </div>
+                                </div>
+                                <div className="flex gap-1">
+                                    <button onClick={() => setEditingId(subject.id)} className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition">
+                                        <Edit2 className="w-4 h-4" />
+                                    </button>
+                                    <button onClick={() => handleDelete(subject.id)} className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition">
+                                        <Trash2 className="w-4 h-4" />
+                                    </button>
                                 </div>
                             </div>
-                            <button onClick={() => handleDelete(subject.id)} className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition">
-                                <Trash2 className="w-4 h-4" />
-                            </button>
-                        </div>
+                        )}
                     </div>
                 ))}
             </div>
